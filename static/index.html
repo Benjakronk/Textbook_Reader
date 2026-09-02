@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lærebok</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=EB+Garamond:wght@400;600&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic@5.0.0/index.css" />
+  <link rel="stylesheet" href="/style.css" />
+  <link id="hljs-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+</head>
+<body>
+  <aside id="sidebar">
+    <div class="sidebar-head">
+      <div class="brand">
+        <img class="brand-icon" src="/icon.svg" alt="" width="20" height="20" />
+        <span>Lærebok</span>
+      </div>
+      <div class="search-row">
+        <input id="search" type="search" placeholder="Søk i filer og innhold…" autocomplete="off" />
+      </div>
+    </div>
+    <nav id="tree" class="tree" aria-label="Innholdsoversikt"></nav>
+    <div id="search-results" class="search-results hidden"></div>
+
+    <div class="sidebar-section" id="section-recent">
+      <div class="section-head">Sist lest</div>
+      <ul id="recent-list" class="mini-list"></ul>
+    </div>
+    <div class="sidebar-section" id="section-bookmarks">
+      <div class="section-head">Bokmerker</div>
+      <ul id="bookmark-list" class="mini-list"></ul>
+    </div>
+    <div class="sidebar-section" id="section-shelves">
+      <div class="section-head">
+        <span>Min bokhylle</span>
+        <button id="btn-new-shelf" class="mini-btn" title="Lag ny hylle" aria-label="Ny hylle">+</button>
+      </div>
+      <ul id="shelf-list" class="mini-list"></ul>
+    </div>
+    <div class="sidebar-section" id="section-tags">
+      <div class="section-head">Emner</div>
+      <ul id="tag-list" class="mini-list tag-cloud"></ul>
+    </div>
+  </aside>
+
+  <main id="main">
+    <header class="topbar">
+      <button id="btn-left-toggle" class="icon-btn" title="Skjul/vis sidemenyen" aria-label="Skjul sidemenyen">☰</button>
+      <div class="crumbs" id="crumbs">Velg en side i menyen</div>
+      <div class="actions">
+        <button id="btn-mark-read" class="text-btn" title="Marker som lest">Marker som lest</button>
+        <button id="btn-bookmark" class="icon-btn" title="Bokmerk denne siden" aria-label="Bokmerk">☆</button>
+        <button id="btn-shelf-add" class="icon-btn" title="Legg denne siden i en bokhylle" aria-label="Legg i bokhylle">📥</button>
+        <button id="btn-toc-toggle" class="icon-btn" title="Vis/skjul innholdsfortegnelse" aria-label="Innholdsfortegnelse">⛬</button>
+        <button id="btn-side-toggle" class="icon-btn" title="Vis/skjul sidepanel for to dokumenter" aria-label="Sidepanel">⫼</button>
+        <button id="btn-library" class="icon-btn" title="Bibliotek (oversikt over emner)" aria-label="Bibliotek">📚</button>
+        <button id="btn-graph" class="icon-btn" title="Graf­visning av lenker" aria-label="Graf">🕸</button>
+        <button class="icon-btn font-btn" data-font="dec" title="Mindre tekst">A−</button>
+        <button class="icon-btn font-btn" data-font="reset" title="Standard tekststørrelse">A°</button>
+        <button class="icon-btn font-btn" data-font="inc" title="Større tekst">A+</button>
+        <button class="icon-btn width-btn" data-width="dec" title="Smalere tekst">↔−</button>
+        <button class="icon-btn width-btn" data-width="reset" title="Standard bredde">↔°</button>
+        <button class="icon-btn width-btn" data-width="inc" title="Bredere tekst">↔+</button>
+        <button id="btn-tts" class="icon-btn" title="Les opp (TTS)" aria-label="Les opp">🔊</button>
+        <button id="btn-focus" class="icon-btn" title="Fokuslesemodus (F11)" aria-label="Fokusmodus">📖</button>
+        <button id="btn-theme" class="icon-btn" title="Bytt tema" aria-label="Tema">🎨</button>
+        <button id="btn-help" class="icon-btn" title="Hurtigtaster og navigasjon" aria-label="Hjelp">❓</button>
+        <button id="btn-print" class="icon-btn" title="Skriv ut / lagre som PDF" aria-label="Skriv ut">🖨</button>
+      </div>
+    </header>
+    <section id="content">
+      <div id="tabbar" class="tabbar" aria-label="Åpne dokumenter"></div>
+      <div class="pane-row">
+        <div class="pane pane-view" data-pane="primary">
+          <article id="view" class="view markdown-body">
+            <div class="welcome">
+              <h1>Velkommen!</h1>
+              <p>Velg en side i menyen til venstre for å begynne å lese.</p>
+              <p>Bruk søkefeltet øverst i menyen for å finne innhold på tvers av kapitlene.</p>
+            </div>
+          </article>
+          <aside id="toc" class="toc" aria-label="Innhold på siden"></aside>
+        </div>
+        <div id="pane-side" class="pane pane-side hidden" data-pane="side" aria-label="Sidepanel">
+          <div class="side-head">
+            <span class="side-title" title=""></span>
+            <button class="side-close icon-btn" title="Lukk sidepanelet" aria-label="Lukk sidepanel">×</button>
+          </div>
+          <article id="side-view" class="view markdown-body"></article>
+        </div>
+      </div>
+    </section>
+    <footer id="status" class="status">
+      <span id="status-msg">Klar.</span>
+      <span id="status-meta"></span>
+    </footer>
+  </main>
+
+  <div id="graph-root" class="graph-root hidden" aria-hidden="true"></div>
+  <div id="modal-root" class="modal-root hidden" aria-hidden="true"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
