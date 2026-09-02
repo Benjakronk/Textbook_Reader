@@ -8,8 +8,8 @@ nettleseren — ingen redigering, ingen serverkrav i produksjon.
 
 ```
 Textbook_Reader/
-  build.py           # bygger static/data/index.json + search.json
-  serve_dev.py       # lokal utviklingsserver
+  build.py           # bygger static/data/*.json og samler _site/
+  .github/workflows/pages.yml   # publiserer automatisk til GitHub Pages
   content/           # læreboken — markdown-filer i mappehierarki
     KRLE/
       Kristendom/
@@ -20,7 +20,9 @@ Textbook_Reader/
     index.html
     app.js
     style.css
+    sw.js
     data/            # genereres av build.py — ikke versjonsstyrt
+  _site/             # ferdig nettsted (static/ + content/) — ikke versjonsstyrt
 ```
 
 ## Frontmatter (valgfritt, øverst i hver fil)
@@ -39,40 +41,40 @@ summary: Korte sammendrag av Bergprekenens hovedbudskap.
   Filer uten `order` faller til slutten i alfabetisk rekkefølge.
 - `tags` — vises i emnemenyen og brukes til filtrering.
 
-## Bygg og kjør
+## Bygg og kjør lokalt
 
 ```bash
-# Bygg indeksen (gjør dette hver gang innholdet endres):
-python build.py
+# Bygg indeksen og samle nettstedet i _site/:
+python build.py --site
 
-# Eller la den bygge automatisk:
-python build.py --watch
-
-# Start utviklingsserveren (åpner nettleseren):
-python serve_dev.py
+# Start en enkel lokal server og åpne http://localhost:8000/
+python -m http.server 8000 --directory _site
 ```
 
-## Distribusjon
+`python build.py` alene oppdaterer bare `static/data/`. Bruk `--watch` for å
+bygge automatisk hver gang innholdet endres.
 
-Hele appen er statiske filer. For å publisere:
+Det trengs ingen egen serverapplikasjon — Python brukes kun til å bygge
+indeksfilene. Selve leseboken er ren HTML/CSS/JS.
 
-1. Kjør `python build.py` slik at `static/data/` er oppdatert.
-2. Kopier mappene `static/` og `content/` til hvilken som helst statisk
-   webvert (GitHub Pages, skolens LMS, en mappe på en USB-stikke, osv.).
-3. Sett opp slik at `static/index.html` er rotsiden, og at både
-   `/content/...` og `/data/...` peker tilbake til riktige mapper.
+## Publisering på GitHub Pages
 
-På GitHub Pages vil et prosjektoppsett som dette fungere:
+Repoet er satt opp til å publisere seg selv. Etter første push:
 
-```
-docs/
-  index.html  ← kopiert fra static/index.html
-  app.js
-  style.css
-  icon.svg
-  data/...    ← kopiert fra static/data/
-  content/... ← kopiert fra content/
-```
+1. Gå til **Settings → Pages** i GitHub-repoet.
+2. Under **Build and deployment → Source**, velg **GitHub Actions**.
+
+Hver gang du pusher til `main`, kjører `.github/workflows/pages.yml`:
+den kjører `python build.py --site` og publiserer `_site/`. Legger du til
+eller endrer en markdown-fil i `content/`, blir indeksen bygd på nytt
+automatisk — du trenger ikke committe `static/data/` eller `_site/`.
+
+Siden blir tilgjengelig på `https://<brukernavn>.github.io/<repo>/`.
+
+Alle URL-er i appen er relative, så den fungerer både på et domenerot og
+under en prosjektsti (`/<repo>/`). Vil du heller publisere manuelt til en
+annen statisk webvert, kjør `python build.py --site` og last opp innholdet
+i `_site/` som dokumentrot.
 
 ## Funksjoner i appen
 

@@ -6,8 +6,13 @@ wikilinks and tags, then writes:
     static/data/index.json  — file tree + metadata, no body
     static/data/search.json — body text per file for in-browser search
 
-Run:  python build.py            (rebuild)
-      python build.py --watch    (rebuild on change; requires watchdog)
+It can also assemble a ready-to-publish static site (used by GitHub Pages):
+
+    _site/                  — index.html, app.js, style.css, data/, content/
+
+Run:  python build.py            (rebuild the index)
+      python build.py --watch    (rebuild on change)
+      python build.py --site     (rebuild + assemble _site/ for deployment)
 """
 from __future__ import annotations
 
@@ -15,13 +20,21 @@ import argparse
 import datetime as dt
 import json
 import re
+import shutil
 import sys
 import time
 from pathlib import Path
 
+# Windows consoles default to cp1252, which cannot print the messages below.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = Path(__file__).resolve().parent
 CONTENT_DIR = ROOT / "content"
-DATA_DIR = ROOT / "static" / "data"
+STATIC_DIR = ROOT / "static"
+DATA_DIR = STATIC_DIR / "data"
+SITE_DIR = ROOT / "_site"
 
 ALLOWED_EXT = {".md", ".markdown", ".txt"}
 
@@ -225,6 +238,23 @@ def write_outputs(files: dict, tree: list[dict]) -> None:
         json.dump(search_payload, f, ensure_ascii=False)
 
 
+def assemble_site(dest: Path = SITE_DIR) -> None:
+    """Copy static/ + content/ into a single publishable folder.
+
+    The result is what a static host serves as its document root, so that
+    index.html, data/ and content/ all sit side by side and every URL in the
+    app can stay relative.
+    """
+    if dest.exists():
+        shutil.rmtree(dest)
+    ignore = shutil.ignore_patterns(".*", "__pycache__")
+    shutil.copytree(STATIC_DIR, dest, ignore=ignore)
+    shutil.copytree(CONTENT_DIR, dest / "content", ignore=ignore)
+    # Tell GitHub Pages to serve the files as-is (Jekyll drops _-prefixed dirs).
+    (dest / ".nojekyll").write_text("", encoding="utf-8")
+    print(f"Samlet nettstedet i {dest.name}/ — pek en statisk webvert hit.")
+
+
 def build_once() -> int:
     if not CONTENT_DIR.exists():
         print(f"Mangler content/ — opprett {CONTENT_DIR.relative_to(ROOT)}/ med markdown-filer.", file=sys.stderr)
@@ -257,12 +287,16 @@ def watch_loop() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Build textbook index")
     ap.add_argument("--watch", action="store_true", help="Bygg automatisk når innholdet endres")
+    ap.add_argument("--site", action="store_true", help="Samle _site/ klar for publisering")
     args = ap.parse_args()
     if args.watch:
         if build_once() != 0:
             return 1
         return watch_loop()
-    return build_once()
+    rc = build_once()
+    if rc == 0 and args.site:
+        assemble_site()
+    return rc
 
 
 if __name__ == "__main__":

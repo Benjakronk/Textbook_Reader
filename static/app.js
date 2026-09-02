@@ -1,8 +1,8 @@
 /* Textbook Reader — read-only markdown viewer for students.
  *
- * Loads /data/index.json (file tree + metadata) and /data/search.json
+ * Loads data/index.json (file tree + metadata) and data/search.json
  * (per-file body text) at startup, then runs entirely in the browser.
- * Markdown sources are fetched on demand from /content/.
+ * Markdown sources are fetched on demand from content/.
  */
 (function () {
   "use strict";
@@ -243,8 +243,8 @@
     let index, search;
     try {
       [index, search] = await Promise.all([
-        fetch("/data/index.json").then(r => r.json()),
-        fetch("/data/search.json").then(r => r.json()),
+        fetch("data/index.json").then(r => r.json()),
+        fetch("data/search.json").then(r => r.json()),
       ]);
     } catch (e) {
       setStatus(`Klarte ikke å laste innholdet: ${e.message}`, "err");
@@ -316,7 +316,7 @@
     if (!("serviceWorker" in navigator)) return;
     if (location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") return;
     const v = encodeURIComponent(buildId);
-    navigator.serviceWorker.register(`/sw.js?v=${v}`).catch(() => {
+    navigator.serviceWorker.register(`sw.js?v=${v}`).catch(() => {
       // SW registration is best-effort; app still works without it.
     });
   }
@@ -454,7 +454,7 @@
     if (!state.current) return href;
     const dir = state.current.path.split("/").slice(0, -1).join("/");
     const joined = (dir ? dir + "/" : "") + href.replace(/^\.\//, "");
-    return "/content/" + joined.split("/").map(encodeURIComponent).join("/");
+    return "content/" + joined.split("/").map(encodeURIComponent).join("/");
   }
 
   function stripFrontmatterForRender(md) {
@@ -935,7 +935,7 @@
   // ============================================================
   async function fetchMarkdown(path) {
     if (state.bodies[path]) return state.bodies[path];
-    const r = await fetch("/content/" + path.split("/").map(encodeURIComponent).join("/"));
+    const r = await fetch("content/" + path.split("/").map(encodeURIComponent).join("/"));
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return await r.text();
   }
