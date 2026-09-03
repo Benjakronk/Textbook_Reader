@@ -45,7 +45,17 @@ self.addEventListener("fetch", (event) => {
 
   const rel = url.pathname.slice(BASE.pathname.length);
 
-  // For data and content: cache-first, fall back to network and stash for next time.
+  // index.json must be network-first: it carries the build id that names the
+  // cache, so serving it from cache would pin the reader to one build forever
+  // (old index -> old cache name -> old index ...) and content updates would
+  // never arrive. It is small; the bulk of the payload stays cache-first.
+  if (rel === "data/index.json") {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+  // Everything else under data/ and content/: cache-first, falling back to the
+  // network and stashing for next time. A new build renames the cache, so
+  // these are re-fetched then anyway.
   if (rel.startsWith("data/") || rel.startsWith("content/")) {
     event.respondWith(cacheFirst(req));
     return;
@@ -64,6 +74,21 @@ async function cacheFirst(req) {
     return fresh;
   } catch (e) {
     // Offline + uncached: surface a minimal error.
+    return new Response("Innholdet er ikke tilgjengelig offline.", {
+      status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+}
+
+async function networkFirst(req) {
+  const cache = await caches.open(CACHE);
+  try {
+    const fresh = await fetch(req);
+    if (fresh.ok) cache.put(req, fresh.clone());
+    return fresh;
+  } catch (e) {
+    const cached = await cache.match(req);
+    if (cached) return cached;
     return new Response("Innholdet er ikke tilgjengelig offline.", {
       status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" },
     });

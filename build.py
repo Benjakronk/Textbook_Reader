@@ -19,8 +19,10 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import shutil
+import stat
 import sys
 import time
 from pathlib import Path
@@ -246,7 +248,12 @@ def assemble_site(dest: Path = SITE_DIR) -> None:
     app can stay relative.
     """
     if dest.exists():
-        shutil.rmtree(dest)
+        # OneDrive/Windows can leave read-only attributes behind; clear them
+        # and retry rather than failing the build.
+        def _force(func, path, _exc):
+            os.chmod(path, stat.S_IWRITE)
+            func(path)
+        shutil.rmtree(dest, onerror=_force)
     ignore = shutil.ignore_patterns(".*", "__pycache__")
     shutil.copytree(STATIC_DIR, dest, ignore=ignore)
     shutil.copytree(CONTENT_DIR, dest / "content", ignore=ignore)
